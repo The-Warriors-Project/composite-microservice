@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pymysql
+python-multipart
+tortoise
+tortoise-orm
+passlib
+bcrypt
+pyjwt
+requests
