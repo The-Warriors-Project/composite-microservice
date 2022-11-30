@@ -75,8 +75,7 @@ def get_user_books(user_id:int):
         return: json with success and book_ids or Failure
     """
 
-    users_endpoint = "http://52.87.245.235:5011/api/v1/users/book_shelf/"
-    users_endpoint += str(user_id)
+    users_endpoint = endpoints.USERS + "books/" + str(user_id)
     return requests.get(users_endpoint)
 
 def update_books(book_ids: list[int], likes_offset: int):
