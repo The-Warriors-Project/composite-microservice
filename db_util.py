@@ -101,3 +101,27 @@ def update_reviews(user_id: int, deletion = True):
     payload = {"disable": deletion}
     return requests.put(reviews_endpoint, data=payload)
 
+
+
+def get_book_shelf(user_id: int):
+    """
+    param: user_id: user from which to obtain book_ids
+    return: json with all books info or failure
+    """
+
+    user_books = get_user_books(user_id)
+    if not user_books or not user_books["success"]:
+        return {"success": False, "payload": "users MC failed fetching books"}
+
+    book_ids = user_books["payload"]
+    return get_books_info(book_ids)
+
+def get_books_info(book_ids: list[int]):
+    """
+    param: book_ids: list of book ids to fetch data for
+    return: json with all books info or failure
+    """
+
+    books_endpoint = endpoints.BOOKS + "book_shelf"
+    payload = {"book_ids": book_ids}
+    return requests.get(books_endpoint, data = payload)
