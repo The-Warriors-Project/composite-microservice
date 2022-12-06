@@ -19,6 +19,8 @@ def delete_user_by_user_name(user_name: str):
     if not res_users or not res_users["success"]:
         return {"success": False, "payload": "users MC failed deleting user"}
 
+    # breaking text field into a list of integers for books MC to process.
+    #book_ids = list(map(int,user_books["payload"].split()))
     book_ids = user_books["payload"]
     res_books = update_books(book_ids,likes_offset)
 
@@ -97,7 +99,7 @@ def update_reviews(user_name: int, deletion = True):
         return: json with success and user_name or Failure
     """
     reviews_endpoint = endpoints.REVIEWS + str(user_name)
-    payload = {"disable": deletion}
+    payload = {"disabled": deletion}
     return requests.put(reviews_endpoint, data=payload)
 
 
