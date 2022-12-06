@@ -65,7 +65,7 @@ def update_users(user_name: int, deletion: bool):
         param: user_name: id for query
         return: json with from users MC
     """
-    users_endpoint = endpoints.USERS + 'user_name/delete_user/{' + str(user_name) + '}'
+    users_endpoint = endpoints.USERS + 'user_name/delete_user/' + str(user_name)
     payload = {"disable" : deletion}
     return requests.put(users_endpoint, data= payload)
 
@@ -75,7 +75,7 @@ def get_user_books(user_name:int):
         return: json with success and book_ids or Failure
     """
 
-    users_endpoint = endpoints.USERS + "books/{" + str(user_name) + '}'
+    users_endpoint = endpoints.USERS + "get_books/" + str(user_name)
     return requests.get(users_endpoint)
 
 def update_books(book_ids: list[int], likes_offset: int):
@@ -96,7 +96,7 @@ def update_reviews(user_name: int, deletion = True):
         param: user_name: id for soft deletion
         return: json with success and user_name or Failure
     """
-    reviews_endpoint = endpoints.REVIEWS + '{' + str(user_name) + '}'
+    reviews_endpoint = endpoints.REVIEWS + str(user_name)
     payload = {"disable": deletion}
     return requests.put(reviews_endpoint, data=payload)
 
