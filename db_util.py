@@ -1,5 +1,8 @@
+from fastapi import Response, status
+import json
 import requests
 import endpoints
+
 
 
 def delete_user_by_user_name(user_name: str):
@@ -11,67 +14,77 @@ def delete_user_by_user_name(user_name: str):
     deletion = True
     likes_offset = -1
 
-    user_books = get_user_books(user_name)
+    user_books = get_user_books(user_name).json()
     if not user_books or not user_books["success"]:
-        return {"success": False, "payload": "users MC failed fetching books"}
+        payload = json.dumps({"success": False, "payload": "users MC failed fetching books"})
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=payload)
 
-    res_users = update_users(user_name,deletion)
+    res_users = update_users(user_name,deletion).json()
     if not res_users or not res_users["success"]:
-        return {"success": False, "payload": "users MC failed deleting user"}
+        payload = json.dumps({"success": False, "payload": "users MC failed fetching books"})
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=payload)
 
     # breaking text field into a list of integers for books MC to process.
-    #book_ids = list(map(int,user_books["payload"].split()))
     book_ids = user_books["payload"]
-    res_books = update_books(book_ids,likes_offset)
-
-    if not res_books or not res_books["success"]:
+    res_books = update_books(book_ids[0]["liked_books"],likes_offset)           # for now no need to preform .json
+    if res_books.status_code != 200:
         #reverting user's soft deletion
         deletion = False
-        revert_users = update_users(user_name, deletion)
+        revert_users = update_users(user_name, deletion).json()
         if not revert_users or not revert_users["success"]:
-            return {"success": False, "payload": "books MC failed updating and users failed to revert"}
+            payload =  json.dumps({"success": False, "payload": "books MC failed updating and users failed to revert"})
+            return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            content=payload)
 
-        return {"success": False, "payload": "books MC failed updating"}
+        payload = json.dumps({"success": False, "payload": "users MC failed fetching books"})
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=payload)
 
-    res_reviews = update_reviews(user_name)
-    if not res_reviews or not res_reviews["success"]:
+    res_reviews = update_reviews(user_name).json()
+    if not res_reviews or res_reviews["status"] != "Success":
         error_msg = "Reviews MC failed to update"
         failed = []
 
         # reverting user's soft deletion
         deletion = False
-        revert_users = update_users(user_name, deletion)
+        revert_users = update_users(user_name, deletion).json()
         if not revert_users or not revert_users["success"]:
             failed.append("Users")
 
         # reverting Books decrements
         likes_offset = +1
-        revert_books = update_books(book_ids, likes_offset)
+        revert_books = update_books(book_ids, likes_offset).json()
         if not revert_books or not revert_books["success"]:
             failed.append("Books")
 
         if failed:
             error_msg += " and " + ' & '.join(failed) + " failed to revert."
 
-        return {"success": False, "payload": error_msg}
+        payload = json.dumps({"success": False, "payload": error_msg})
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=payload)
 
-    return {
+    payload =  {
         "success": True,
         "payload": {
             "user_name": user_name
         }
     }
+    return Response(status_code=status.HTTP_200_OK,
+                    content=payload)
 
-def update_users(user_name: int, deletion: bool):
+def update_users(user_name: str, deletion: bool):
     """
         param: user_name: id for query
         return: json with from users MC
     """
     users_endpoint = endpoints.USERS + 'user_name/delete_user/' + str(user_name)
     payload = {"disable" : deletion}
-    return requests.put(users_endpoint, data= payload)
+    return requests.put(users_endpoint, data= json.dumps(payload))   # /user_name/delete_user/{user_name}
 
-def get_user_books(user_name:int):
+def get_user_books(user_name:str):
     """
         param: user_name: id for query
         return: json with success and book_ids or Failure
@@ -91,7 +104,7 @@ def update_books(book_ids: list[int], likes_offset: int):
         "offset": likes_offset,
         "book_ids": book_ids
                }
-    return requests.put(books_endpoint, data=payload)
+    return requests.put(books_endpoint, data=json.dumps(payload))
 
 def update_reviews(user_name: int, deletion = True):
     """
@@ -100,24 +113,24 @@ def update_reviews(user_name: int, deletion = True):
     """
     reviews_endpoint = endpoints.REVIEWS + str(user_name)
     payload = {"disabled": deletion}
-    return requests.put(reviews_endpoint, data=payload)
+    return requests.put(reviews_endpoint, data=json.dumps(payload))
 
 
 
-def get_book_shelf(user_name: int):
+def get_book_shelf(user_name: str):
     """
     param: user_name: user from which to obtain book_ids
     return: json with all books info or failure
     """
 
-    user_books = get_user_books(user_name)
+    user_books = get_user_books(user_name).json()
     if not user_books or not user_books["success"]:
         return {"success": False, "payload": "users MC failed fetching books"}
 
-    book_ids = user_books["payload"]
+    book_ids = user_books["payload"][0]["liked_books"]
     return get_books_info(book_ids)
 
-def get_books_info(book_ids: list[int]):
+def get_books_info(book_ids: str):
     """
     param: book_ids: list of book ids to fetch data for
     return: json with all books info or failure
@@ -125,4 +138,5 @@ def get_books_info(book_ids: list[int]):
 
     books_endpoint = endpoints.BOOKS + "book_shelf"
     payload = {"book_ids": book_ids}
-    return requests.get(books_endpoint, data = payload)
+    print("!", payload)
+    return requests.get(books_endpoint, data = json.dumps(payload))

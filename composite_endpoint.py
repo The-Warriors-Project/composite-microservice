@@ -12,7 +12,7 @@ def get_user_info_by_id(user_name: str):
     return db_util.delete_user_by_user_name(user_name=user_name)
 
 @composite_router.get(path='/{user_name}', status_code=status.HTTP_200_OK, operation_id='get_book_shelf')
-def get_user_info_by_id(user_name: int):
+def get_user_info_by_id(user_name: str):
     """
     param user_name: user id
     return: return all books' info from the user's book-shelf
