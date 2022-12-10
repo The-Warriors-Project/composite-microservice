@@ -28,7 +28,7 @@ def delete_user_by_user_name(user_name: str):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
-    book_ids = user_books["payload"][0]["liked_books"]
+    book_ids = user_books["payload"][0]["liked_books"].strip()
     if book_ids != None:
         res_books = update_books(book_ids,likes_offset)           # for now no need to preform .json
 
@@ -40,7 +40,7 @@ def delete_user_by_user_name(user_name: str):
             payload = json.dumps({"success": False, "payload": "books MC failed updating and users failed to revert"})
             return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content=payload)
-
+        print(book_ids)
         payload = json.dumps({"success": False, "payload": "books MC failed fetching books"})
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
@@ -103,10 +103,12 @@ def update_books(book_ids: list, likes_offset: int):
         return: json with success and book_ids or Failure
     """
     books_endpoint = IP_calls.BOOKS + "likes_count"
+
     payload = {
         "offset": likes_offset,
         "book_ids": book_ids
                }
+    print(payload)
     return requests.put(books_endpoint, data=json.dumps(payload))
 
 def update_reviews(user_name: int, deletion = True):
@@ -130,7 +132,7 @@ def get_book_shelf(user_name: str):
     if not user_books or not user_books["success"]:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="users MC failed fetching books")
 
-    book_ids = user_books["payload"][0]["liked_books"]
+    book_ids = user_books["payload"][0]["liked_books"].strip()
     return get_books_info(book_ids)
 
 def get_books_info(book_ids: str):
