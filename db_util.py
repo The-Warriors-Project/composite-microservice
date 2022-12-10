@@ -28,10 +28,11 @@ def delete_user_by_user_name(user_name: str):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
-    book_ids = user_books["payload"]
-    res_books = update_books(book_ids[0]["liked_books"],likes_offset)           # for now no need to preform .json
-    if res_books.status_code != 200:
+    book_ids = user_books["payload"][0]["liked_books"]
+    if book_ids != None:
+        res_books = update_books(book_ids,likes_offset)           # for now no need to preform .json
 
+    if book_ids != None and res_books.status_code != 200:
         #reverting user's soft deletion
         deletion = False
         revert_users = update_users(user_name, deletion).json()
