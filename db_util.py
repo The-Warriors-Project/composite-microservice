@@ -14,9 +14,11 @@ def delete_user_by_user_name(user_name: str):
     deletion = True
     likes_offset = -1
 
-    user_books = get_user_books(user_name).json()
+    user_books = get_user_books(user_name)
+    #stat_code = user_books.status_code          # Incorrect right now. not used.
+    user_books = user_books.json()
     if not user_books or not user_books["success"]:
-        payload = json.dumps({"success": False, "payload": "users MC failed fetching books"})
+        payload = json.dumps({"success": False, "payload": " users MC failed fetching books"})
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
@@ -26,19 +28,19 @@ def delete_user_by_user_name(user_name: str):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
-    # breaking text field into a list of integers for books MC to process.
     book_ids = user_books["payload"]
     res_books = update_books(book_ids[0]["liked_books"],likes_offset)           # for now no need to preform .json
     if res_books.status_code != 200:
+
         #reverting user's soft deletion
         deletion = False
         revert_users = update_users(user_name, deletion).json()
         if not revert_users or not revert_users["success"]:
-            payload =  json.dumps({"success": False, "payload": "books MC failed updating and users failed to revert"})
+            payload = json.dumps({"success": False, "payload": "books MC failed updating and users failed to revert"})
             return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content=payload)
 
-        payload = json.dumps({"success": False, "payload": "users MC failed fetching books"})
+        payload = json.dumps({"success": False, "payload": "books MC failed fetching books"})
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
@@ -56,9 +58,10 @@ def delete_user_by_user_name(user_name: str):
         # reverting Books decrements
         likes_offset = +1
         revert_books = update_books(book_ids, likes_offset).json()
-        if not revert_books or not revert_books["success"]:
+        if res_books.status_code != 200:
             failed.append("Books")
 
+        # updating message about fails
         if failed:
             error_msg += " and " + ' & '.join(failed) + " failed to revert."
 
@@ -68,12 +71,11 @@ def delete_user_by_user_name(user_name: str):
 
     payload =  {
         "success": True,
-        "payload": {
-            "user_name": user_name
-        }
+        "payload": user_name + " successfully deleted"
     }
+
     return Response(status_code=status.HTTP_200_OK,
-                    content=payload)
+                    content=json.dumps(payload))
 
 def update_users(user_name: str, deletion: bool):
     """
@@ -125,7 +127,7 @@ def get_book_shelf(user_name: str):
 
     user_books = get_user_books(user_name).json()
     if not user_books or not user_books["success"]:
-        return {"success": False, "payload": "users MC failed fetching books"}
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="users MC failed fetching books")
 
     book_ids = user_books["payload"][0]["liked_books"]
     return get_books_info(book_ids)
@@ -135,8 +137,6 @@ def get_books_info(book_ids: str):
     param: book_ids: list of book ids to fetch data for
     return: json with all books info or failure
     """
-
-    books_endpoint = endpoints.BOOKS + "book_shelf"
-    payload = {"book_ids": book_ids}
-    print("!", payload)
-    return requests.get(books_endpoint, data = json.dumps(payload))
+    path_params = '+'.join(book_ids.split())
+    books_endpoint = endpoints.BOOKS + "book_ids/" + path_params
+    return requests.get(books_endpoint)

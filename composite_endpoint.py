@@ -18,4 +18,4 @@ def get_user_info_by_id(user_name: str):
     return: return all books' info from the user's book-shelf
     """
 
-    return db_util.get_book_shelf(user_name=user_name)
+    return db_util.get_book_shelf(user_name=user_name).json()
