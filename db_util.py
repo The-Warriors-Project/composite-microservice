@@ -1,7 +1,7 @@
 from fastapi import Response, status
 import json
 import requests
-import endpoints
+import IP_calls
 
 
 
@@ -82,7 +82,7 @@ def update_users(user_name: str, deletion: bool):
         param: user_name: id for query
         return: json with from users MC
     """
-    users_endpoint = endpoints.USERS + 'user_name/delete_user/' + str(user_name)
+    users_endpoint = IP_calls.USERS + 'user_name/delete_user/' + str(user_name)
     payload = {"disable" : deletion}
     return requests.put(users_endpoint, data= json.dumps(payload))   # /user_name/delete_user/{user_name}
 
@@ -92,16 +92,16 @@ def get_user_books(user_name:str):
         return: json with success and book_ids or Failure
     """
 
-    users_endpoint = endpoints.USERS + "get_books/" + str(user_name)
+    users_endpoint = IP_calls.USERS + "get_books/" + str(user_name)
     return requests.get(users_endpoint)
 
-def update_books(book_ids: list[int], likes_offset: int):
+def update_books(book_ids: list, likes_offset: int):
     """
         param: user_name: book_ids to be updated.
         param: likes_offset: increment/decrement likes.
         return: json with success and book_ids or Failure
     """
-    books_endpoint = endpoints.BOOKS + "likes_count"
+    books_endpoint = IP_calls.BOOKS + "likes_count"
     payload = {
         "offset": likes_offset,
         "book_ids": book_ids
@@ -113,7 +113,7 @@ def update_reviews(user_name: int, deletion = True):
         param: user_name: id for soft deletion
         return: json with success and user_name or Failure
     """
-    reviews_endpoint = endpoints.REVIEWS + str(user_name)
+    reviews_endpoint = IP_calls.REVIEWS + str(user_name)
     payload = {"disabled": deletion}
     return requests.put(reviews_endpoint, data=json.dumps(payload))
 
@@ -138,5 +138,5 @@ def get_books_info(book_ids: str):
     return: json with all books info or failure
     """
     path_params = '+'.join(book_ids.split())
-    books_endpoint = endpoints.BOOKS + "book_ids/" + path_params
+    books_endpoint = IP_calls.BOOKS + "book_ids/" + path_params
     return requests.get(books_endpoint)
