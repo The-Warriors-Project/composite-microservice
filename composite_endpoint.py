@@ -9,7 +9,11 @@ def get_user_info_by_id(user_name: str):
     return: json with success and user_name or failure
     """
 
-    return db_util.delete_user_by_user_name(user_name=user_name)
+    res = db_util.delete_user_by_user_name(user_name=user_name)
+    try:
+        return res.json()
+    except:
+        return res
 
 @composite_router.get(path='/{user_name}', status_code=status.HTTP_200_OK, operation_id='get_book_shelf')
 def get_user_info_by_id(user_name: str):
@@ -17,5 +21,9 @@ def get_user_info_by_id(user_name: str):
     param user_name: user id
     return: return all books' info from the user's book-shelf
     """
+    res = db_util.get_book_shelf(user_name=user_name)
+    try:
+        return res.json()
+    except:
+        return res
 
-    return db_util.get_book_shelf(user_name=user_name).json()
