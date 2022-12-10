@@ -28,9 +28,9 @@ def delete_user_by_user_name(user_name: str):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
-    book_ids = user_books["payload"][0]["liked_books"].strip()
+    book_ids = user_books["payload"][0]["liked_books"]
     if book_ids != None:
-        res_books = update_books(book_ids,likes_offset)           # for now no need to preform .json
+        res_books = update_books(book_ids.strip(),likes_offset)           # for now no need to preform .json
 
     if book_ids != None and res_books.status_code != 200:
         #reverting user's soft deletion
@@ -131,9 +131,14 @@ def get_book_shelf(user_name: str):
     user_books = get_user_books(user_name).json()
     if not user_books or not user_books["success"]:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="users MC failed fetching books")
+    
 
-    book_ids = user_books["payload"][0]["liked_books"].strip()
-    return get_books_info(book_ids)
+    book_ids = user_books["payload"][0]["liked_books"]
+
+    if book_ids != None:
+        return get_books_info(book_ids.strip())
+    
+    return {}
 
 def get_books_info(book_ids: str):
     """
