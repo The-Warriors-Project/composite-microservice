@@ -13,8 +13,4 @@ Open [http://localhost:5011](http://localhost:5011) to view it in your browser.
 To see all endpoints available by Swagger, go to [http://localhost:5011/docs](http://localhost:5011/docs)
 New endpoints will be automatically added to Swagger.
 
-
-The simplest test to test that the app is running properly is to \
-go to [http://localhost:5011]/api/health/](http://localhost:5011/api/health/) 
-
 Once all end-points are ready, the app is ready to be deployed.
