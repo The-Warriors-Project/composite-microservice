@@ -4,39 +4,47 @@ import requests
 import IP_calls
 
 
-
 def delete_user_by_user_name(user_name: str):
     """
     param: user_name: id for query
     return: json with success/ Failure
     """
-
     deletion = True
     likes_offset = -1
 
+    # Getting books
     user_books = get_user_books(user_name)
-    #stat_code = user_books.status_code          # Incorrect right now. not used.
+    stat_code = user_books.status_code
     user_books = user_books.json()
-    if not user_books or not user_books["success"]:
+    if stat_code != 200 or not user_books or not user_books["success"]:
         payload = json.dumps({"success": False, "payload": " users MC failed fetching books"})
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
-    res_users = update_users(user_name,deletion).json()
-    if not res_users or not res_users["success"]:
+    # Deleting user
+    response = update_users(user_name,deletion)
+    stat_code = response.status_code
+    res_users = response.json()
+    if stat_code != 200 or not res_users or not res_users["success"]:
         payload = json.dumps({"success": False, "payload": "users MC failed fetching books"})
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
+
+    # Decrementing books' likes count
     book_ids = user_books["payload"][0]["liked_books"]
     if book_ids != None:
-        res_books = update_books(book_ids.strip(),likes_offset)           # for now no need to preform .json
+        res_books = update_books(book_ids.strip(),likes_offset)
 
     if book_ids != None and res_books.status_code != 200:
-        #reverting user's soft deletion
+
+        # Reverting user's deletion
         deletion = False
-        revert_users = update_users(user_name, deletion).json()
-        if not revert_users or not revert_users["success"]:
+        response = update_users(user_name, deletion)
+        stat_code = response.status_code
+        revert_users = response.json()
+        if stat_code != 200 or not revert_users or not revert_users["success"]:
+
             payload = json.dumps({"success": False, "payload": "books MC failed updating and users failed to revert"})
             return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content=payload)
@@ -45,12 +53,13 @@ def delete_user_by_user_name(user_name: str):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
+    # Removing reviews
     res_reviews = update_reviews(user_name).json()
     if not res_reviews or res_reviews["status"] != "Success":
         error_msg = "Reviews MC failed to update"
         failed = []
 
-        # reverting user's soft deletion
+        # reverting user's deletion
         deletion = False
         revert_users = update_users(user_name, deletion).json()
         if not revert_users or not revert_users["success"]:
@@ -119,8 +128,6 @@ def update_reviews(user_name: int, deletion = True):
     reviews_endpoint = IP_calls.REVIEWS + str(user_name)
     payload = {"disabled": deletion}
     return requests.put(reviews_endpoint, data=json.dumps(payload))
-
-
 
 def get_book_shelf(user_name: str):
     """
