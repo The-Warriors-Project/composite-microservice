@@ -30,16 +30,11 @@ def delete_user_by_user_name(user_name: str):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
 
-<<<<<<< Updated upstream
-    book_ids = user_books["payload"][0]["liked_books"].strip()
-    if book_ids != None:
-        res_books = update_books(book_ids,likes_offset)           # for now no need to preform .json
-=======
+
     # Decrementing books' likes count
     book_ids = user_books["payload"][0]["liked_books"]
     if book_ids != None:
         res_books = update_books(book_ids.strip(),likes_offset)
->>>>>>> Stashed changes
 
     if book_ids != None and res_books.status_code != 200:
 
@@ -143,9 +138,14 @@ def get_book_shelf(user_name: str):
     user_books = get_user_books(user_name).json()
     if not user_books or not user_books["success"]:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="users MC failed fetching books")
+    
 
-    book_ids = user_books["payload"][0]["liked_books"].strip()
-    return get_books_info(book_ids)
+    book_ids = user_books["payload"][0]["liked_books"]
+
+    if book_ids != None:
+        return get_books_info(book_ids.strip())
+    
+    return {}
 
 def get_books_info(book_ids: str):
     """
