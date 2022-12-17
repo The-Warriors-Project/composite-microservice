@@ -40,7 +40,6 @@ def delete_user_by_user_name(user_name: str):
             payload = json.dumps({"success": False, "payload": "books MC failed updating and users failed to revert"})
             return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content=payload)
-        print(book_ids)
         payload = json.dumps({"success": False, "payload": "books MC failed fetching books"})
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         content=payload)
@@ -108,7 +107,6 @@ def update_books(book_ids: list, likes_offset: int):
         "offset": likes_offset,
         "book_ids": book_ids
                }
-    print(payload)
     return requests.put(books_endpoint, data=json.dumps(payload))
 
 def update_reviews(user_name: int, deletion = True):
@@ -148,3 +146,34 @@ def get_books_info(book_ids: str):
     path_params = '+'.join(book_ids.split())
     books_endpoint = IP_calls.BOOKS + "book_ids/" + path_params
     return requests.get(books_endpoint)
+
+
+def like_book(user_name: str, book_id: str):
+    """
+    param: user_name: str
+    param: book_id: book id to like
+    return: Response object
+    """
+    users_call = IP_calls.USERS + "user_name/add_book/" + user_name + "?books=" + book_id
+    users_res = requests.put(users_call, data= {'books': book_id})
+    # users need to change
+    try:
+        users_res = users_res.json()
+    except Exception:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=" users MC failed to like book")
+    if not users_res['success']:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=users_res['payload'])
+
+    res_books = update_books(book_id, +1)
+    if res_books.status_code != 200:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=" books MC failed to like book, users did not revert")
+
+    payload = {
+        "success": True,
+        "payload": " book id  #" + book_id + " is now in " + user_name + "'s liked books"
+    }
+    return Response(status_code=status.HTTP_200_OK,
+                    content=json.dumps(payload))
