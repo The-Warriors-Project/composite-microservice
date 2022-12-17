@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Response
 import db_util
 composite_router = APIRouter(prefix='/api/v1/composite')
 
@@ -27,3 +27,14 @@ def get_user_info_by_id(user_name: str):
     except:
         return res
 
+@composite_router.put(path='/like_book/{user_name}', status_code=status.HTTP_200_OK, operation_id='like_book')
+def like_book(user_name: str, book: str):
+    """
+    param user_name: user id
+    return: json with success and user_name or failure
+    """
+    res = db_util.like_book(user_name=user_name, book_id= book)
+    try:
+        return res.json()
+    except:
+        return res
