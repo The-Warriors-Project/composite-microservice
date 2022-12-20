@@ -177,3 +177,35 @@ def like_book(user_name: str, book_id: str):
     }
     return Response(status_code=status.HTTP_200_OK,
                     content=json.dumps(payload))
+
+
+def unlike_book(user_name: str, book_id: str):
+    """
+    param: user_name: str
+    param: book_id: book id to like
+    return: Response object
+    """
+    users_call = IP_calls.USERS + "user_name/remove_book/" + user_name + "?books=" + book_id
+    users_res = requests.put(users_call, data= {'books': book_id})
+
+    try:
+        users_res = users_res.json()
+    except Exception:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=" users MC failed to unlike book")
+    if not users_res['success']:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=users_res['payload'])
+
+
+    res_books = update_books(book_id, -1)
+    if res_books.status_code != 200:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        content=" books MC failed to like book, users did not revert")
+
+    payload = {
+        "success": True,
+        "payload": " book id  #" + book_id + " is out of " + user_name + "'s liked books"
+    }
+    return Response(status_code=status.HTTP_200_OK,
+                    content=json.dumps(payload))
