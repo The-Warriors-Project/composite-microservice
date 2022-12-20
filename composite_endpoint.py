@@ -38,3 +38,15 @@ def like_book(user_name: str, book: str):
         return res.json()
     except:
         return res
+
+@composite_router.put(path='/unlike_book/{user_name}', status_code=status.HTTP_200_OK, operation_id='unlike_book')
+def like_book(user_name: str, book: str):
+    """
+    param user_name: user id
+    return: json with success and user_name or failure
+    """
+    res = db_util.unlike_book(user_name=user_name, book_id= book)
+    try:
+        return res.json()
+    except:
+        return res
